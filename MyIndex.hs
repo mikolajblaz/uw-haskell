@@ -10,12 +10,12 @@ class Ord a => Ix a where
   -- komunikat o błędzie jesli indeks poza zakresem.
   index :: (a, a) -> a -> Int
   inRange :: (a, a) -> a -> Bool
-  rangeSize :: (a, a) -> Int 
+  rangeSize :: (a, a) -> Int
 
 instance Ix Int where
   range (a, b) = [a..b]
   index (a, b) c | inRange (a, b) c = c - a
-				 | otherwise = error "Not in range"
+                 | otherwise = error "Index out of range"
   inRange (a, b) c = a <= c && c <= b
   rangeSize (a, b) | a <= b = b - a + 1
-			       | otherwise = 0
+                   | otherwise = 0
