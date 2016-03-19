@@ -1,14 +1,8 @@
-class Ord a => Ix a where
-  -- range (lo,hi) daje listę wszystkich indeksów
-  -- pomiędzy lo a hi
-  range :: (a, a) -> [a]
-  -- index (lo,hi) i daje numer kolejny indeksu i w zakresie
-  -- (od 0)
-  -- np index (7,9) 8 = 1; index ('a','d') 'd' = 3
-  -- komunikat o błędzie jesli indeks poza zakresem.
-  index :: (a, a) -> a -> Int
-  inRange :: (a, a) -> a -> Bool
-  rangeSize :: (a, a) -> Int 
+module MyArray where
 
-instance Ix Char where
-  
+import MyIndex
+
+data BST i e = Empty | Node {key :: i, value :: e, left, right :: (BST i e)}
+  deriving (Eq, Show)
+
+data Array i e = Arr (i, i) (BST i e)
