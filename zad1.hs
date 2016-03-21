@@ -1,3 +1,5 @@
+import System.Environment
+import System.IO.Error
 import MyGraph
 
 readInts :: String -> [Int]
@@ -9,6 +11,19 @@ parseLine s = (x, xs)
 
 main :: IO ()
 main = do
-  input <- getContents
-  let graph = graphFromList $ map parseLine $ lines input in
-    putStrLn $ show $ dfs graph
+  args <- getArgs
+
+  eInput <- let readInput = case args of {
+      [] -> getContents;
+      (arg:_) -> readFile arg
+    } in tryIOError(readInput)
+
+  case eInput of
+      Left e -> if isDoesNotExistError e
+        then print "Error: file does not exist"
+        else print "Error: file could not be read"
+
+      Right inputStr -> if null parsedFile
+          then print "Error: file is empty"
+          else print $ dfs $ graphFromList parsedFile
+        where parsedFile = map parseLine $ filter (not . null) $ lines inputStr
