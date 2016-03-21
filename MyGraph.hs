@@ -16,11 +16,15 @@ graphFromList = MyArray.array (0::VIx, maxBound::VIx)
 updateVertex :: VIx -> VData -> Graph -> Graph
 updateVertex = MyArray.update
 
+isVertex :: VIx -> Graph -> Bool
+isVertex = MyArray.present
+
 neighbours :: Graph -> VIx -> [VIx]
 neighbours = (MyArray.!)
 
 dfs :: Graph -> [VIx]
-dfs g = Set.toAscList $ dfsFrom g 1 (Set.singleton 1)
+dfs g | 1 `isVertex` g = Set.toAscList $ dfsFrom g 1 (Set.singleton 1)
+      | otherwise = []
 
 -- | Właściwa realizacja algorytmu DFS.
 -- | Dla każdego nieodwiedzonego sąsiada wywołuje rekurencyjnie siebie.

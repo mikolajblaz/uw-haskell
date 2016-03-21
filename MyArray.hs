@@ -1,6 +1,6 @@
 module MyArray(
   Array,
-  listArray, (!), elems, array, update, (//),
+  listArray, (!), elems, array, update, (//), present,
   range, index, inRange, rangeSize
 ) where
 
@@ -68,3 +68,7 @@ update k v (Arr r t) | inRange r k = Arr r (insert k v t)
 -- | Daje tablicę będącą wariantem danej, zmienioną pod podanymi indeksami
 (//)      :: (Ix i ) => Array i e -> [(i,e)] -> Array i e
 (//) arr kvs = foldr (\(k, v) a -> update k v a) arr kvs
+
+-- | Sprawdza czy w tablicy znajduje się coś pod danym indeksem
+present   :: Ix i => i -> Array i e -> Bool
+present k (Arr _ t) = contains k t
