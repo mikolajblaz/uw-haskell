@@ -1,7 +1,11 @@
-module MyArray where
+module MyArray(
+  listArray, (!), elems, array, update, (//),
+  range, index, inRange, rangeSize
+) where
 
 import MyIndex
 
+-- Typ drzew wyszukiwań binarnych wraz z podstawową implementacją
 data BST i e = Empty | Node {key :: i, val :: e, left, right :: (BST i e)}
   deriving (Eq, Show)
 
@@ -31,7 +35,7 @@ toList Empty = []
 toList (Node _ vn l r) = (toList l) ++ (vn : toList r)
 
 
-
+-- Tablice
 data Array i e = Arr {rng :: (i, i), tree :: (BST i e)}
   deriving (Eq, Show)
 
