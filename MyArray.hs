@@ -38,7 +38,10 @@ toList (Node _ vn l r) = (toList l) ++ (vn : toList r)
 
 -- Tablice
 data Array i e = Arr {rng :: (i, i), tree :: (BST i e)}
-  deriving (Eq, Show)
+  deriving (Eq)
+
+instance (Ix i, Show i, Show e) => Show (Array i e) where
+  show a@(Arr r _) = "array " ++ (show r) ++ " " ++ (show $ elems a)
 
 -- | Buduje tablicę dla danego zakresu i listy elementów
 listArray :: (Ix i) => (i, i) -> [e] -> Array i e
