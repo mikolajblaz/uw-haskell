@@ -6,38 +6,53 @@ module MyArray(
 
 import MyIndex
 
--- Typ drzew wyszukiwań binarnych wraz z podstawową implementacją
-data BST i e = Empty | Node {key :: i, val :: e, left, right :: (BST i e)}
+half :: Int -> Int -> Int
+half a b = (a + b) `div` 2
+
+-- Typ drzew przedziałowych wraz z podstawową implementacją
+data IntervalTree e = Empty (Int, Int) | Leaf Int e |
+    Interval (Int, Int) (IntervalTree e) (IntervalTree e)
   deriving (Eq, Show)
 
-contains  :: (Ix i) => i -> BST i e -> Bool
-contains _ Empty = False
-contains k (Node kn _ l r) | k < kn = contains k l
-                           | k > kn = contains k r
-                           | otherwise = True
+unsafeFind :: Int -> IntervalTree e -> Leaf Int e
+unsafeFind k (Interval (a, b) l r) | k <= s = unsafeFind k l
+                                   | otherwise = unsafeFind k r
+  where s = half a b
+unsafeFind k n = n
 
-insert    :: (Ix i) => i -> e -> BST i e -> BST i e
+contains  :: (Ix i) => i -> IntervalTree e -> Bool
+contains _ (Empty r) = False
+contains k (Leaf k v) = True
+contains k (Interval (a, b) l r) | k < kn = contains k l
+                                 | k > kn = contains k r
+                                 | otherwise = True
+
+--------- TODO: poniżej
+
+insert    :: (Ix i) => i -> e -> IntervalTree e -> IntervalTree e
 insert k v Empty = Node k v Empty Empty
-insert k v (Node kn vn l r) | k < kn = Node kn vn (insert k v l) r
+insert k v (Interval (a, b) l r) | k < kn = Node kn vn (insert k v l) r
                             | k > kn = Node kn vn l (insert k v r)
                             | otherwise = Node kn v l r
 
-getElem   :: (Ix i) => i -> BST i e -> e
+getElem   :: (Ix i) => i -> IntervalTree e -> e
 getElem _ Empty = error "No such index"
-getElem k (Node kn vn l r) | k < kn = getElem k l
+getElem k (Interval (a, b) l r) | k < kn = getElem k l
                            | k > kn = getElem k r
                            | otherwise = vn
 
-fromList  :: (Ix i) => [(i, e)] -> BST i e
+fromList  :: (Ix i) => [(i, e)] -> IntervalTree e
 fromList kvs = foldr (\(k, v) tree -> insert k v tree) Empty kvs
 
-toList    :: (Ix i) => BST i e -> [e]
+toList    :: (Ix i) => IntervalTree e -> [e]
 toList Empty = []
 toList (Node _ vn l r) = (toList l) ++ (vn : toList r)
 
 
+----------- TODO: powyżej
+
 -- Tablice
-data Array i e = Arr {rng :: (i, i), tree :: (BST i e)}
+data Array i e = Arr {rng :: (i, i), tree :: (IntervalTree e)}
   deriving (Eq)
 
 instance (Ix i, Show i, Show e) => Show (Array i e) where
