@@ -1,4 +1,5 @@
 module MyArray(
+  Array,
   listArray, (!), elems, array, update, (//),
   range, index, inRange, rangeSize
 ) where
