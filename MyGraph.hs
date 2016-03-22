@@ -1,6 +1,6 @@
 module MyGraph(
   Graph,
-  graphFromList, updateVertex, neighbours, dfs, dfsFrom
+  graphFromList, updateVertex, isVertex, neighbours, dfs, dfsFrom
 ) where
 
 import qualified Data.Set as Set

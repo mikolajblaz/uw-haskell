@@ -1,15 +1,29 @@
 module MyArray(
   Array,
   listArray, (!), elems, array, update, (//), present, empty,
-  range, index, inRange, rangeSize
+  range, index, inRange, rangeSize, half
 ) where
 
 import MyIndex
 
+-- | Średnia dwóch liczb nieujemnych. Równoważnie:
+-- half (a, b) = (a + b) `div` 2, ale wtedy może nastąpić przepełnienie
 half :: (Int, Int) -> Int
-half (a, b) = (a + b) `div` 2
+-- half (a, b) = (a + b) `div` 2
+half (a, b) = divA + divB + (modA + modB) `div` 2
+  where
+    (divA, modA) = divMod a 2
+    (divB, modB) = divMod b 2
 
--- Typ drzew przedziałowych wraz z podstawową implementacją
+-- | Typ drzew przedziałowych wraz z podstawową implementacją.
+-- Zakładamy, że każda funkcja (operująca na kluczach) wywoływana jest
+-- z kluczami, które są wewnątrz przedziału reprezentowanego przez całe drzewo.
+--
+-- Drzewo składa się z węzłów wewnętrznych (Branch), które reprezentują
+-- przedziały oraz z liści (Leaf), które reprezentują przedziały jednopunktowe
+-- i przechowują wartości.
+-- Żeby nie przeszukiwać pustych drzew, puste poddrzewa oznaczamy jako
+-- EmptyBranch (dla węzłów) oraz EmptyLeaf (dla liści)
 data IntervalTree e =
     Branch      (Int, Int) (IntervalTree e) (IntervalTree e) |
     EmptyBranch (Int, Int) (IntervalTree e) (IntervalTree e) |
@@ -24,36 +38,28 @@ makeEmpty (a, b) | a < b = EmptyBranch (a, b) (makeEmpty (a, s)) (makeEmpty (s +
                  | otherwise = EmptyLeaf
   where s = half (a, b)
 
-unsafeFind :: Int -> IntervalTree e -> IntervalTree e
-unsafeFind k (Branch rng l r) | k <= half rng = unsafeFind k l
-                              | otherwise     = unsafeFind k r
-unsafeFind _ n = n
+find :: Int -> IntervalTree e -> IntervalTree e
+find k (Branch rng l r) | k <= half rng = find k l
+                        | otherwise     = find k r
+find _ n = n
 
-unsafeContains  :: Int -> IntervalTree e -> Bool
-unsafeContains k t = case unsafeFind k t of
+contains  :: Int -> IntervalTree e -> Bool
+contains k t = case find k t of
   Leaf _    -> True
   otherwise -> False
 
-unsafeGetElem   :: Int -> IntervalTree e -> e
-unsafeGetElem k t = case unsafeFind k t of
+getElem   :: Int -> IntervalTree e -> e
+getElem k t = case find k t of
   Leaf v    -> v
   otherwise -> error "No such index"
-
-unsafeInsert :: Int -> e -> IntervalTree e -> IntervalTree e
-unsafeInsert _ v EmptyLeaf = Leaf v
-unsafeInsert _ v (Leaf _)  = Leaf v
-unsafeInsert k v (EmptyBranch rng l r) | k <= half rng = Branch rng (unsafeInsert k v l) r
-                                       | otherwise     = Branch rng l (unsafeInsert k v r)
-unsafeInsert k v (Branch rng l r)      | k <= half rng = Branch rng (unsafeInsert k v l) r
-                                       | otherwise     = Branch rng l (unsafeInsert k v r)
 
 insert :: Int -> e -> IntervalTree e -> IntervalTree e
 insert _ v EmptyLeaf = Leaf v
 insert _ v (Leaf _)  = Leaf v
-insert k v t@(EmptyBranch rng _ _) | inRange rng k = unsafeInsert k v t
-                                   | otherwise     = error "Index out of range"
-insert k v t@(Branch rng l r)      | inRange rng k = unsafeInsert k v t
-                                   | otherwise     = error "Index out of range"
+insert k v (EmptyBranch rng l r) | k <= half rng = Branch rng (insert k v l) r
+                                 | otherwise     = Branch rng l (insert k v r)
+insert k v (Branch rng l r)      | k <= half rng = Branch rng (insert k v l) r
+                                 | otherwise     = Branch rng l (insert k v r)
 
 toList    :: IntervalTree e -> [e]
 toList EmptyLeaf           = []
@@ -87,11 +93,11 @@ array rng kvs = (empty rng) // kvs
 
 -- | Daje tablicę będącą wariantem danej, zmienioną pod podanym indeksem
 update    :: Ix i => i -> e -> Array i e -> Array i e
-update k v (Arr rng t) = Arr rng (unsafeInsert (index rng k) v t)
+update k v (Arr rng t) = Arr rng (insert (index rng k) v t)
 
 -- | Daje element tablicy o podanym indeksie
 (!)       :: Ix i => Array i e -> i -> e
-(!) (Arr rng t) k = unsafeGetElem (index rng k) t
+(!) (Arr rng t) k = getElem (index rng k) t
 
 -- | Daje listę elementów tablicy (w kolejności indeksów)
 elems     :: Ix i => Array i e -> [e]
@@ -105,4 +111,4 @@ empty rng = Arr rng $ makeEmpty (0, (rangeSize rng) - 1)
 
 -- | Sprawdza czy w tablicy znajduje się coś pod danym indeksem
 present   :: Ix i => i -> Array i e -> Bool
-present k (Arr rng t) = inRange rng k && unsafeContains (index rng k) t
+present k (Arr rng t) = inRange rng k && contains (index rng k) t
