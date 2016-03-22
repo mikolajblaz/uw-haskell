@@ -25,7 +25,7 @@ makeEmpty (a, b) | a < b = EmptyBranch (a, b) (makeEmpty (a, s)) (makeEmpty (s +
   where s = half (a, b)
 
 unsafeFind :: Int -> IntervalTree e -> IntervalTree e
-unsafeFind k (Branch ran l r) | k <= half ran = unsafeFind k l
+unsafeFind k (Branch rng l r) | k <= half rng = unsafeFind k l
                               | otherwise     = unsafeFind k r
 unsafeFind _ n = n
 
@@ -42,17 +42,17 @@ unsafeGetElem k t = case unsafeFind k t of
 unsafeInsert :: Int -> e -> IntervalTree e -> IntervalTree e
 unsafeInsert _ v EmptyLeaf = Leaf v
 unsafeInsert _ v (Leaf _)  = Leaf v
-unsafeInsert k v (EmptyBranch ran l r) | k <= half ran = Branch ran (unsafeInsert k v l) r
-                                       | otherwise     = Branch ran l (unsafeInsert k v r)
-unsafeInsert k v (Branch ran l r)      | k <= half ran = Branch ran (unsafeInsert k v l) r
-                                       | otherwise     = Branch ran l (unsafeInsert k v r)
+unsafeInsert k v (EmptyBranch rng l r) | k <= half rng = Branch rng (unsafeInsert k v l) r
+                                       | otherwise     = Branch rng l (unsafeInsert k v r)
+unsafeInsert k v (Branch rng l r)      | k <= half rng = Branch rng (unsafeInsert k v l) r
+                                       | otherwise     = Branch rng l (unsafeInsert k v r)
 
 insert :: Int -> e -> IntervalTree e -> IntervalTree e
 insert _ v EmptyLeaf = Leaf v
 insert _ v (Leaf _)  = Leaf v
-insert k v t@(EmptyBranch ran _ _) | inRange ran k = unsafeInsert k v t
+insert k v t@(EmptyBranch rng _ _) | inRange rng k = unsafeInsert k v t
                                    | otherwise     = error "Index out of range"
-insert k v t@(Branch ran l r)      | inRange ran k = unsafeInsert k v t
+insert k v t@(Branch rng l r)      | inRange rng k = unsafeInsert k v t
                                    | otherwise     = error "Index out of range"
 
 toList    :: IntervalTree e -> [e]
@@ -98,8 +98,10 @@ elems     :: Ix i => Array i e -> [e]
 elems (Arr _ t) = toList t
 
 -- | Tworzy pustą tablicę o zadanym zakresie indeksów
+-- Zakładamy, że dla każdego niepustego przedziału (a, b) zachodzi:
+-- index (a, b) a == 0 oraz index (a, b) b == (rangeSize (a, b)) - 1
 empty     :: Ix i => (i, i) -> Array i e
-empty rng@(a, b) = Arr (a, b) $ makeEmpty (index rng a, index rng b)
+empty rng = Arr rng $ makeEmpty (0, (rangeSize rng) - 1)
 
 -- | Sprawdza czy w tablicy znajduje się coś pod danym indeksem
 present   :: Ix i => i -> Array i e -> Bool
