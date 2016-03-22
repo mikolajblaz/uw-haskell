@@ -20,7 +20,7 @@ isVertex :: VIx -> Graph -> Bool
 isVertex = MyArray.present
 
 neighbours :: Graph -> VIx -> [VIx]
-neighbours = (MyArray.!)
+neighbours = (MyArray.getDefault [])
 
 dfs :: Graph -> [VIx]
 dfs g | 1 `isVertex` g = Set.toAscList $ dfsFrom g 1 (Set.singleton 1)

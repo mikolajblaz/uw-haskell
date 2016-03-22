@@ -1,6 +1,6 @@
 module MyArray(
   Array,
-  listArray, (!), elems, array, update, (//), present, empty,
+  listArray, (!), elems, array, update, (//), present, empty, getDefault,
   range, index, inRange, rangeSize, half
 ) where
 
@@ -52,6 +52,11 @@ getElem   :: Int -> IntervalTree e -> e
 getElem k t = case find k t of
   Leaf v    -> v
   otherwise -> error "No such index"
+
+getElemDefault :: e -> Int -> IntervalTree e -> e
+getElemDefault def k t = case find k t of
+  Leaf v    -> v
+  otherwise -> def
 
 insert :: Int -> e -> IntervalTree e -> IntervalTree e
 insert _ v EmptyLeaf = Leaf v
@@ -108,6 +113,11 @@ elems (Arr _ t) = toList t
 -- index (a, b) a == 0 oraz index (a, b) b == (rangeSize (a, b)) - 1
 empty     :: Ix i => (i, i) -> Array i e
 empty rng = Arr rng $ makeEmpty (0, (rangeSize rng) - 1)
+
+-- | Zwraca element pod danym indeksem lub domyślną wartość, jeśli takiego
+-- elemntu nie ma
+getDefault   :: Ix i => e -> Array i e -> i -> e
+getDefault def (Arr rng t) k = getElemDefault def (index rng k) t
 
 -- | Sprawdza czy w tablicy znajduje się coś pod danym indeksem
 present   :: Ix i => i -> Array i e -> Bool
