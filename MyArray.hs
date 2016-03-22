@@ -105,5 +105,4 @@ empty rng = Arr rng $ makeEmpty (0, (rangeSize rng) - 1)
 
 -- | Sprawdza czy w tablicy znajduje się coś pod danym indeksem
 present   :: Ix i => i -> Array i e -> Bool
-present k (Arr rng t) | inRange rng k = unsafeContains (index rng k) t
-                      | otherwise     = False
+present k (Arr rng t) = inRange rng k && unsafeContains (index rng k) t
