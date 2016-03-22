@@ -63,43 +63,45 @@ toList (Branch _ l r) = (toList l) ++ (toList r)
 
 
 
--- Tablice
+-- | Do implementacji tablic używamy drzew indeksowanych typem Int. Przed każdą
+-- operacją na tablicy zamieniamy typ (Ix i) na typ Int za pomocą funkcji 'index'.
 data Array i e = Arr {rng :: (i, i), tree :: (IntervalTree e)}
   deriving (Eq)
 
 instance (Ix i, Show i, Show e) => Show (Array i e) where
-  show a@(Arr r _) = "array " ++ (show r) ++ " " ++ (show $ elems a)
+  show a@(Arr rng _) = "array " ++ (show rng) ++ " " ++ (show $ elems a)
 
 -- | Buduje tablicę dla danego zakresu i listy elementów
 listArray :: (Ix i) => (i, i) -> [e] -> Array i e
-listArray r es = array r (zip (range r) es)
-
--- | Daje element tablicy o podanym indeksie
-(!)       :: Ix i => Array i e -> i -> e
-(!) (Arr r t) k | inRange r k = unsafeGetElem k t
-                | otherwise = error "Index out of range"
-
--- | Daje listę elementów tablicy (w kolejności indeksów)
-elems     :: Ix i => Array i e -> [e]
-elems (Arr _ t) = toList t
+listArray rng vs = array rng (zip (range rng) vs)
 
 -- | Buduje tablicę z podanej listy par (indeks,wartość)
 array     :: (Ix i) => (i, i) -> [(i,e)] -> Array i e
-array rng kvs = foldr (\(k, v) arr -> update k v arr) (empty rng) kvs
-
--- | Daje tablicę będącą wariantem danej, zmienioną pod podanym indeksem
-update    :: Ix i => i -> e -> Array i e -> Array i e
-update k v (Arr r t) | inRange r k = Arr r (unsafeInsert k v t)
-                     | otherwise = error "Index out of range"
+array rng kvs = (empty rng) // kvs
 
 -- | Daje tablicę będącą wariantem danej, zmienioną pod podanymi indeksami
 (//)      :: (Ix i ) => Array i e -> [(i,e)] -> Array i e
 (//) arr kvs = foldr (\(k, v) a -> update k v a) arr kvs
 
+-- Powyższe trzy funkcje nie zależą od implementacji struktury tablicy, poniższe owszem.
+
+-- | Daje tablicę będącą wariantem danej, zmienioną pod podanym indeksem
+update    :: Ix i => i -> e -> Array i e -> Array i e
+update k v (Arr rng t) = Arr rng (unsafeInsert (index rng k) v t)
+
+-- | Daje element tablicy o podanym indeksie
+(!)       :: Ix i => Array i e -> i -> e
+(!) (Arr rng t) k = unsafeGetElem (index rng k) t
+
+-- | Daje listę elementów tablicy (w kolejności indeksów)
+elems     :: Ix i => Array i e -> [e]
+elems (Arr _ t) = toList t
+
+-- | Tworzy pustą tablicę o zadanym zakresie indeksów
+empty     :: Ix i => (i, i) -> Array i e
+empty rng@(a, b) = Arr (a, b) $ makeEmpty (index rng a, index rng b)
+
 -- | Sprawdza czy w tablicy znajduje się coś pod danym indeksem
 present   :: Ix i => i -> Array i e -> Bool
-present k (Arr r t) | inRange r k = unsafeContains k t
-                    | otherwise   = False
-
-empty :: Ix i => (i, i) -> Array i e
-empty (a, b) = Arr (a, b) $ makeEmpty (a, b)
+present k (Arr rng t) | inRange rng k = unsafeContains (index rng k) t
+                      | otherwise     = False
