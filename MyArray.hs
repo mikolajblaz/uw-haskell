@@ -1,6 +1,6 @@
 module MyArray(
   Array,
-  listArray, (!), elems, array, update, (//), present,
+  listArray, (!), elems, array, update, (//), present, empty,
   range, index, inRange, rangeSize
 ) where
 
@@ -55,9 +55,6 @@ insert k v t@(EmptyBranch ran _ _) | inRange ran k = unsafeInsert k v t
 insert k v t@(Branch ran l r)      | inRange ran k = unsafeInsert k v t
                                    | otherwise     = error "Index out of range"
 
-fromList  :: (Int, Int) -> [(Int, e)] -> IntervalTree e
-fromList ran kvs = foldr (\(k, v) tree -> insert k v tree) (makeEmpty ran) kvs
-
 toList    :: IntervalTree e -> [e]
 toList EmptyLeaf           = []
 toList (EmptyBranch _ _ _) = []
@@ -88,7 +85,7 @@ elems (Arr _ t) = toList t
 
 -- | Buduje tablicę z podanej listy par (indeks,wartość)
 array     :: (Ix i) => (i, i) -> [(i,e)] -> Array i e
-array r kvs = Arr r (fromList r kvs)
+array rng kvs = foldr (\(k, v) arr -> update k v arr) (empty rng) kvs
 
 -- | Daje tablicę będącą wariantem danej, zmienioną pod podanym indeksem
 update    :: Ix i => i -> e -> Array i e -> Array i e
@@ -103,3 +100,6 @@ update k v (Arr r t) | inRange r k = Arr r (unsafeInsert k v t)
 present   :: Ix i => i -> Array i e -> Bool
 present k (Arr r t) | inRange r k = unsafeContains k t
                     | otherwise   = False
+
+empty :: Ix i => (i, i) -> Array i e
+empty (a, b) = Arr (a, b) $ makeEmpty (a, b)
